@@ -1,6 +1,7 @@
 package game
 
 import (
+	"log"
 	"math"
 	"math/rand"
 	"time"
@@ -12,8 +13,12 @@ type AI struct {
 	Game       *Game
 }
 
-func NewAI(color Color, difficulty string) *AI {
+func init() {
+	// Initialize random seed once at package init
 	rand.Seed(time.Now().UnixNano())
+}
+
+func NewAI(color Color, difficulty string) *AI {
 	return &AI{
 		Color:      color,
 		Difficulty: difficulty,
@@ -23,22 +28,36 @@ func NewAI(color Color, difficulty string) *AI {
 func (ai *AI) GetMove(game *Game) *Point {
 	ai.Game = game
 	
+	log.Printf("AI GetMove called - Color: %s, Difficulty: %s, CurrentTurn: %s", 
+		ai.Color.String(), ai.Difficulty, game.CurrentTurn.String())
+	
+	var move *Point
 	switch ai.Difficulty {
 	case "random":
-		return ai.getRandomMove()
+		move = ai.getRandomMove()
 	case "easy":
-		return ai.getEasyMove()
+		move = ai.getEasyMove()
 	case "medium":
-		return ai.getMediumMove()
+		move = ai.getMediumMove()
 	case "hard":
-		return ai.getHardMove()
+		move = ai.getHardMove()
 	default:
-		return ai.getEasyMove()
+		move = ai.getEasyMove()
 	}
+	
+	if move != nil {
+		log.Printf("AI selected move at (%d, %d)", move.X, move.Y)
+	} else {
+		log.Printf("AI is passing (no valid moves)")
+	}
+	
+	return move
 }
 
 func (ai *AI) getRandomMove() *Point {
 	validMoves := ai.Game.GetValidMoves(ai.Color)
+	log.Printf("Random AI: Found %d valid moves", len(validMoves))
+	
 	if len(validMoves) == 0 {
 		return nil
 	}

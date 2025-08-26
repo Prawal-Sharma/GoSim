@@ -197,11 +197,17 @@ class GoGame {
 
     async makeAIMove() {
         if (this.currentTurn === this.playerColor || !this.gameStarted) {
+            console.log('AI not moving - turn:', this.currentTurn, 'player:', this.playerColor, 'started:', this.gameStarted);
             return;
         }
         
+        console.log('Requesting AI move for', this.currentTurn, 'with difficulty', this.aiDifficulty);
+        
         try {
-            const response = await fetch('/api/ai-move', {
+            const apiUrl = window.location.port === '8081' ? 
+                'http://localhost:8081/api/ai-move' : 
+                '/api/ai-move';
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -215,15 +221,20 @@ class GoGame {
             });
             
             const data = await response.json();
+            console.log('AI response:', data);
             
             if (data.pass) {
+                console.log('AI is passing');
                 this.pass();
-            } else {
+            } else if (data.x !== undefined && data.y !== undefined) {
+                console.log('AI playing at', data.x, data.y);
                 this.makeMove({
                     x: data.x,
                     y: data.y,
                     color: this.currentTurn === 'black' ? 1 : 2
                 });
+            } else {
+                console.error('Invalid AI response:', data);
             }
         } catch (error) {
             console.error('AI move error:', error);

@@ -80,6 +80,9 @@ func main() {
 		} else {
 			playerColor = game.White
 		}
+		
+		// Set the current turn to AI's color so it can make a move
+		boardGame.CurrentTurn = playerColor
 
 		move := getAIMove(boardGame, playerColor, req.Difficulty)
 
@@ -108,8 +111,8 @@ func main() {
 		json.NewEncoder(w).Encode(lessons)
 	})
 
-	fmt.Println("Server starting on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	fmt.Println("Server starting on http://localhost:8081")
+	log.Fatal(http.ListenAndServe(":8081", r))
 }
 
 func getAIMove(g *game.Game, color game.Color, difficulty string) *game.Point {
