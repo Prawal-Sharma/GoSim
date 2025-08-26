@@ -1,0 +1,79 @@
+[
+  {
+    "id": 1,
+    "title": "Introduction to Go",
+    "level": "beginner",
+    "description": "Learn the basic concepts and objectives of Go",
+    "content": "Go (also known as Weiqi in Chinese and Baduk in Korean) is one of the oldest board games still played today, originating in China over 4,000 years ago.\n\n# The Objective\nThe goal of Go is to control more territory than your opponent by the end of the game.\n\n# The Equipment\n* The board: A grid of 19x19 lines (beginners often start with 9x9 or 13x13)\n* Black and white stones: Black plays first\n* Simple rules that lead to infinite complexity\n\n# Why Learn Go?\n* Develops strategic thinking\n* Improves pattern recognition\n* Enhances concentration and patience\n* Connects you with thousands of years of culture",
+    "exercises": [
+      {
+        "type": "quiz",
+        "question": "What is the main objective of Go?",
+        "answer": "To control more territory than your opponent"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Placing Stones and Liberties",
+    "level": "beginner",
+    "description": "Understand how stones are placed and what liberties are",
+    "content": "# Placing Stones\nPlayers take turns placing stones on the intersections (not in the squares) of the board. Once placed, stones don't move.\n\n# Liberties\nLiberties are the empty points directly adjacent to a stone or group of stones (not diagonally).\n\n* A stone in the middle of the board has 4 liberties\n* A stone on the edge has 3 liberties\n* A stone in the corner has 2 liberties\n\n# Connected Groups\nStones of the same color that are adjacent (not diagonally) form a group and share their liberties.\n\n# Life and Death\nWhen a group loses all its liberties, it is captured and removed from the board.",
+    "boardSetup": {
+      "stones": [
+        {"x": 4, "y": 4, "color": 1},
+        {"x": 3, "y": 4, "color": 1},
+        {"x": 5, "y": 4, "color": 2}
+      ],
+      "markers": [
+        {"type": "circle", "x": 4, "y": 3, "color": "green"},
+        {"type": "circle", "x": 4, "y": 5, "color": "green"}
+      ]
+    }
+  },
+  {
+    "id": 3,
+    "title": "Capturing Stones",
+    "level": "beginner",
+    "description": "Learn how to capture opponent stones",
+    "content": "# Basic Capture\nYou capture enemy stones by removing all their liberties. Captured stones are removed from the board and kept as prisoners.\n\n# Capture Rules\n* Fill all liberties of an enemy group to capture it\n* Captured stones count as points (in Japanese rules)\n* Multiple groups can be captured in one move\n\n# Self-Capture (Suicide)\nYou cannot place a stone that would have no liberties, unless that move captures enemy stones.\n\n# Practice\nTry to identify groups that can be captured in one move (this is called 'atari').",
+    "exercises": [
+      {
+        "type": "problem",
+        "description": "Find the move that captures white stones"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "The Ko Rule",
+    "level": "beginner",
+    "description": "Understanding the ko rule and why it exists",
+    "content": "# What is Ko?\n'Ko' means 'eternity' in Japanese. It's a situation where players could capture and recapture the same stone forever.\n\n# The Ko Rule\nYou cannot immediately recapture a stone that just captured your stone if it would recreate the previous board position.\n\n# Ko Fights\n* You must play elsewhere first (a 'ko threat')\n* If your opponent responds to your threat, you can recapture\n* Ko fights are some of the most exciting moments in Go!\n\n# Types of Ko\n* Simple ko: The basic back-and-forth capture\n* Complex ko: Multiple ko situations\n* Ko threats: Moves that demand a response",
+    "boardSetup": {
+      "stones": [
+        {"x": 3, "y": 3, "color": 1},
+        {"x": 4, "y": 3, "color": 2},
+        {"x": 5, "y": 3, "color": 1},
+        {"x": 3, "y": 4, "color": 2},
+        {"x": 5, "y": 4, "color": 2},
+        {"x": 3, "y": 5, "color": 1},
+        {"x": 4, "y": 5, "color": 2},
+        {"x": 5, "y": 5, "color": 1}
+      ]
+    }
+  },
+  {
+    "id": 5,
+    "title": "Territory and Eyes",
+    "level": "intermediate",
+    "description": "Learn about territory and the concept of eyes",
+    "content": "# Territory\nTerritory is the empty space you surround and control. At the end of the game, you count your territory plus captured stones.\n\n# Eyes\nAn 'eye' is an empty point surrounded by your stones. A group with two separate eyes can never be captured - it's 'alive'.\n\n# Two Eyes Live\n* A group needs two separate eyes to be unconditionally alive\n* One eye is not enough - the opponent can fill it\n* False eyes don't count (when the surrounding stones can be captured)\n\n# Making Territory\n* Build walls to enclose space\n* Corner territory is easiest to make\n* Side territory is next\n* Center territory is hardest",
+    "exercises": [
+      {
+        "type": "recognition",
+        "description": "Identify which groups have two eyes"
+      }
+    ]
+  }
+]

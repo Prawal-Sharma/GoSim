@@ -1,0 +1,77 @@
+[
+  {
+    "id": 1,
+    "title": "Basic Capture",
+    "description": "Capture the white stone by removing its last liberty",
+    "difficulty": "beginner",
+    "board": [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 1, 0, 0, 0, 0, 0],
+      [0, 0, 0, 1, 2, 1, 0, 0, 0],
+      [0, 0, 0, 0, 1, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    "solution": {
+      "moves": [{"x": 4, "y": 3, "color": 1}],
+      "explanation": "Place a black stone at the last liberty to capture the white stone."
+    },
+    "hints": [
+      "Look for the white stone's remaining liberty",
+      "The white stone has only one empty point adjacent to it"
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Two-Stone Capture",
+    "description": "Capture the white group",
+    "difficulty": "beginner",
+    "board": [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 1, 1, 1, 0, 0, 0, 0],
+      [0, 0, 1, 2, 2, 1, 0, 0, 0],
+      [0, 0, 0, 1, 1, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    "solution": {
+      "moves": [{"x": 3, "y": 2, "color": 1}],
+      "explanation": "Play at the vital point to capture both white stones at once."
+    },
+    "hints": [
+      "The white group shares liberties",
+      "Find the point that removes all liberties at once"
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Atari Practice",
+    "description": "Put the white stone in atari (one liberty)",
+    "difficulty": "beginner",
+    "board": [
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 1, 2, 0, 0, 0, 0],
+      [0, 0, 0, 0, 1, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    "solution": {
+      "moves": [{"x": 5, "y": 3, "color": 1}],
+      "explanation": "Place a stone to threaten immediate capture (atari)."
+    },
+    "hints": [
+      "Reduce white's liberties to one",
+      "After your move, white should have only one escape"
+    ]
+  }
+]

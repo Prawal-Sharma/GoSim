@@ -1,0 +1,378 @@
+class GoGame {
+    constructor() {
+        this.board = new GoBoard('go-board', 13);
+        this.gameMode = null;
+        this.playerColor = 'black';
+        this.currentTurn = 'black';
+        this.moveHistory = [];
+        this.gameStarted = false;
+        this.wsConnection = null;
+        this.aiDifficulty = 'easy';
+        this.roomId = null;
+        this.gameTimer = null;
+        this.startTime = null;
+        
+        this.setupEventListeners();
+        this.initializeGame();
+    }
+
+    setupEventListeners() {
+        this.board.onMove = (x, y) => this.handleMove(x, y);
+        
+        document.querySelectorAll('.size-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.changeBoardSize(e));
+        });
+        
+        document.getElementById('single-player-btn').addEventListener('click', () => this.startSinglePlayer());
+        document.getElementById('multiplayer-btn').addEventListener('click', () => this.startMultiplayer());
+        document.getElementById('learn-btn').addEventListener('click', () => this.startLearningMode());
+        document.getElementById('puzzle-btn').addEventListener('click', () => this.startPuzzleMode());
+        
+        document.getElementById('pass-btn').addEventListener('click', () => this.pass());
+        document.getElementById('resign-btn').addEventListener('click', () => this.resign());
+        document.getElementById('undo-btn').addEventListener('click', () => this.undo());
+        document.getElementById('new-game-btn').addEventListener('click', () => this.newGame());
+        
+        document.getElementById('create-room-btn').addEventListener('click', () => this.createRoom());
+        document.getElementById('join-room-btn').addEventListener('click', () => this.joinRoom());
+        
+        document.getElementById('difficulty-select').addEventListener('change', (e) => {
+            this.aiDifficulty = e.target.value;
+        });
+        
+        document.querySelector('.close').addEventListener('click', () => this.closeModal());
+        document.getElementById('modal-ok-btn').addEventListener('click', () => this.closeModal());
+    }
+
+    initializeGame() {
+        this.updateStatus('Welcome! Select a game mode to start playing.');
+        this.updateTurnIndicator();
+    }
+
+    changeBoardSize(event) {
+        if (this.gameStarted) {
+            this.showModal('Game in Progress', 'Please finish the current game before changing board size.');
+            return;
+        }
+        
+        const size = parseInt(event.target.dataset.size);
+        document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        this.board.reset(size);
+    }
+
+    startSinglePlayer() {
+        this.gameMode = 'ai';
+        this.gameStarted = true;
+        this.playerColor = 'black';
+        this.currentTurn = 'black';
+        this.moveHistory = [];
+        
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('game-controls').style.display = 'block';
+        document.getElementById('ai-difficulty').style.display = 'block';
+        
+        this.board.reset(this.board.size);
+        this.startTimer();
+        this.updateStatus('Game started! You are playing Black.');
+        this.updateTurnIndicator();
+    }
+
+    startMultiplayer() {
+        this.gameMode = 'multiplayer';
+        document.getElementById('room-section').style.display = 'block';
+        document.getElementById('ai-difficulty').style.display = 'none';
+        
+        this.initializeWebSocket();
+    }
+
+    startLearningMode() {
+        this.gameMode = 'learn';
+        document.getElementById('tutorial-panel').style.display = 'block';
+        document.getElementById('puzzle-panel').style.display = 'none';
+        
+        this.loadLesson(1);
+    }
+
+    startPuzzleMode() {
+        this.gameMode = 'puzzle';
+        document.getElementById('puzzle-panel').style.display = 'block';
+        document.getElementById('tutorial-panel').style.display = 'none';
+        
+        this.loadPuzzle(1);
+    }
+
+    async handleMove(x, y) {
+        if (!this.gameStarted || this.currentTurn !== this.playerColor) {
+            return;
+        }
+        
+        if (this.gameMode === 'ai') {
+            const moveData = {
+                x: x,
+                y: y,
+                color: this.currentTurn === 'black' ? 1 : 2
+            };
+            
+            this.makeMove(moveData);
+            
+            setTimeout(() => {
+                this.makeAIMove();
+            }, 500);
+        } else if (this.gameMode === 'multiplayer' && this.wsConnection) {
+            this.wsConnection.sendMove(x, y);
+        } else if (this.gameMode === 'puzzle') {
+            this.checkPuzzleMove(x, y);
+        }
+    }
+
+    makeMove(moveData) {
+        const color = moveData.color;
+        const currentBoard = this.board.board.map(row => [...row]);
+        currentBoard[moveData.x][moveData.y] = color;
+        
+        this.board.updateBoard(currentBoard);
+        this.board.setLastMove(moveData.x, moveData.y);
+        
+        this.moveHistory.push({
+            move: this.moveHistory.length + 1,
+            color: color === 1 ? 'Black' : 'White',
+            position: this.getPositionNotation(moveData.x, moveData.y)
+        });
+        
+        this.updateMoveHistory();
+        this.currentTurn = this.currentTurn === 'black' ? 'white' : 'black';
+        this.updateTurnIndicator();
+        
+        document.getElementById('move-count').textContent = this.moveHistory.length;
+    }
+
+    async makeAIMove() {
+        if (this.currentTurn === this.playerColor || !this.gameStarted) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/ai-move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    board: this.board.board,
+                    boardSize: this.board.size,
+                    color: this.currentTurn === 'black' ? 'Black' : 'White',
+                    difficulty: this.aiDifficulty
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.pass) {
+                this.pass();
+            } else {
+                this.makeMove({
+                    x: data.x,
+                    y: data.y,
+                    color: this.currentTurn === 'black' ? 1 : 2
+                });
+            }
+        } catch (error) {
+            console.error('AI move error:', error);
+        }
+    }
+
+    pass() {
+        this.moveHistory.push({
+            move: this.moveHistory.length + 1,
+            color: this.currentTurn === 'black' ? 'Black' : 'White',
+            position: 'Pass'
+        });
+        
+        this.updateMoveHistory();
+        this.currentTurn = this.currentTurn === 'black' ? 'white' : 'black';
+        this.updateTurnIndicator();
+        
+        if (this.wsConnection) {
+            this.wsConnection.sendPass();
+        }
+    }
+
+    resign() {
+        if (!this.gameStarted) return;
+        
+        const winner = this.currentTurn === 'black' ? 'White' : 'Black';
+        this.showModal('Game Over', `${this.currentTurn === 'black' ? 'Black' : 'White'} resigns. ${winner} wins!`);
+        this.gameStarted = false;
+        
+        if (this.wsConnection) {
+            this.wsConnection.sendResign();
+        }
+    }
+
+    undo() {
+        if (this.moveHistory.length === 0) return;
+        
+        if (this.wsConnection) {
+            this.wsConnection.sendUndo();
+        }
+    }
+
+    newGame() {
+        this.gameStarted = false;
+        this.moveHistory = [];
+        this.currentTurn = 'black';
+        this.board.reset(this.board.size);
+        
+        document.getElementById('menu-screen').style.display = 'block';
+        document.getElementById('game-controls').style.display = 'none';
+        document.getElementById('room-section').style.display = 'none';
+        
+        this.stopTimer();
+        this.updateStatus('Select a game mode to start playing.');
+        this.updateMoveHistory();
+    }
+
+    createRoom() {
+        if (this.wsConnection) {
+            this.wsConnection.createGame(this.board.size);
+        }
+    }
+
+    joinRoom() {
+        const roomId = document.getElementById('room-id-input').value.trim();
+        if (roomId && this.wsConnection) {
+            this.wsConnection.joinGame(roomId);
+        }
+    }
+
+    initializeWebSocket() {
+        this.wsConnection = new WebSocketConnection(this);
+    }
+
+    async loadLesson(lessonId) {
+        try {
+            const response = await fetch('/api/lessons');
+            const lessons = await response.json();
+            const lesson = lessons.find(l => l.id === lessonId);
+            
+            if (lesson) {
+                document.getElementById('tutorial-content').innerHTML = `
+                    <h3>${lesson.title}</h3>
+                    <p>${lesson.description}</p>
+                    <div>${lesson.content}</div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading lesson:', error);
+        }
+    }
+
+    async loadPuzzle(puzzleId) {
+        try {
+            const response = await fetch('/api/puzzles');
+            const puzzles = await response.json();
+            const puzzle = puzzles.find(p => p.id === puzzleId);
+            
+            if (puzzle) {
+                document.getElementById('puzzle-title').textContent = puzzle.title;
+                document.getElementById('puzzle-description').textContent = puzzle.description;
+                
+                this.board.updateBoard(puzzle.board);
+                this.currentPuzzle = puzzle;
+            }
+        } catch (error) {
+            console.error('Error loading puzzle:', error);
+        }
+    }
+
+    checkPuzzleMove(x, y) {
+        console.log('Checking puzzle move at', x, y);
+    }
+
+    getPositionNotation(x, y) {
+        const letter = String.fromCharCode(65 + x);
+        const number = this.board.size - y;
+        return `${letter}${number}`;
+    }
+
+    updateStatus(message) {
+        document.getElementById('game-status').textContent = message;
+    }
+
+    updateTurnIndicator() {
+        const turnText = this.currentTurn === 'black' ? "Black's Turn" : "White's Turn";
+        document.getElementById('current-turn').textContent = turnText;
+    }
+
+    updateMoveHistory() {
+        const historyDiv = document.getElementById('move-history');
+        historyDiv.innerHTML = '';
+        
+        this.moveHistory.forEach(entry => {
+            const moveDiv = document.createElement('div');
+            moveDiv.className = 'move-entry';
+            moveDiv.textContent = `${entry.move}. ${entry.color} ${entry.position}`;
+            historyDiv.appendChild(moveDiv);
+        });
+        
+        historyDiv.scrollTop = historyDiv.scrollHeight;
+    }
+
+    startTimer() {
+        this.startTime = Date.now();
+        this.gameTimer = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('game-time').textContent = `${minutes}:${seconds}`;
+        }, 1000);
+    }
+
+    stopTimer() {
+        if (this.gameTimer) {
+            clearInterval(this.gameTimer);
+            this.gameTimer = null;
+        }
+        document.getElementById('game-time').textContent = '00:00';
+    }
+
+    showModal(title, message) {
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-body').textContent = message;
+        document.getElementById('modal').style.display = 'flex';
+    }
+
+    closeModal() {
+        document.getElementById('modal').style.display = 'none';
+    }
+
+    onWebSocketMessage(data) {
+        if (data.type === 'game_created') {
+            this.roomId = data.data.roomId;
+            this.playerColor = 'black';
+            document.getElementById('room-info').innerHTML = `Room ID: ${this.roomId}<br>Waiting for opponent...`;
+        } else if (data.type === 'game_joined') {
+            this.roomId = data.data.roomId;
+            this.playerColor = 'white';
+            document.getElementById('room-info').innerHTML = `Room ID: ${this.roomId}<br>Game started!`;
+        } else if (data.type === 'game_started') {
+            this.gameStarted = true;
+            document.getElementById('menu-screen').style.display = 'none';
+            document.getElementById('game-controls').style.display = 'block';
+            this.startTimer();
+        } else if (data.type === 'move_made') {
+            this.board.updateBoard(data.data.board);
+            this.board.setLastMove(data.data.x, data.data.y);
+            this.currentTurn = data.data.info.currentTurn.toLowerCase();
+            this.updateTurnIndicator();
+        }
+    }
+}
+
+window.currentPlayer = 'black';
+
+document.addEventListener('DOMContentLoaded', () => {
+    window.game = new GoGame();
+});

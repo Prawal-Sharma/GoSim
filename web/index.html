@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoSim - Interactive Go Learning</title>
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>GoSim - Learn Go Interactively</h1>
+            <div id="user-info">
+                <span id="player-color"></span>
+                <span id="game-status">Welcome!</span>
+            </div>
+        </header>
+
+        <div class="container">
+            <aside class="sidebar left">
+                <div class="panel">
+                    <h2>Game Options</h2>
+                    <div id="menu-screen">
+                        <div class="menu-section">
+                            <h3>Board Size</h3>
+                            <div class="board-size-selector">
+                                <button class="size-btn" data-size="9">9x9</button>
+                                <button class="size-btn active" data-size="13">13x13</button>
+                                <button class="size-btn" data-size="19">19x19</button>
+                            </div>
+                        </div>
+
+                        <div class="menu-section">
+                            <h3>Game Mode</h3>
+                            <button id="single-player-btn" class="menu-btn">vs AI</button>
+                            <button id="multiplayer-btn" class="menu-btn">vs Player</button>
+                            <button id="learn-btn" class="menu-btn">Learn</button>
+                            <button id="puzzle-btn" class="menu-btn">Puzzles</button>
+                        </div>
+
+                        <div class="menu-section" id="ai-difficulty" style="display:none;">
+                            <h3>AI Difficulty</h3>
+                            <select id="difficulty-select">
+                                <option value="random">Random</option>
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+
+                        <div class="menu-section" id="room-section" style="display:none;">
+                            <h3>Multiplayer</h3>
+                            <input type="text" id="room-id-input" placeholder="Enter Room ID">
+                            <button id="join-room-btn">Join Room</button>
+                            <button id="create-room-btn">Create Room</button>
+                            <div id="room-info"></div>
+                        </div>
+                    </div>
+
+                    <div id="game-controls" style="display:none;">
+                        <button id="pass-btn" class="control-btn">Pass</button>
+                        <button id="resign-btn" class="control-btn">Resign</button>
+                        <button id="undo-btn" class="control-btn">Undo</button>
+                        <button id="new-game-btn" class="control-btn">New Game</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Learning Progress</h2>
+                    <div id="progress-tracker">
+                        <div class="progress-item">
+                            <span>Rules Mastery</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 20%"></div>
+                            </div>
+                        </div>
+                        <div class="progress-item">
+                            <span>Tactics</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 10%"></div>
+                            </div>
+                        </div>
+                        <div class="progress-item">
+                            <span>Strategy</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 5%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main>
+                <div id="board-container">
+                    <canvas id="go-board"></canvas>
+                    <div id="board-coordinates"></div>
+                </div>
+                <div id="turn-indicator">
+                    <div class="turn-display">
+                        <span id="current-turn">Black's Turn</span>
+                        <div id="captured-stones">
+                            <span>Captured: Black <span id="black-captures">0</span> | White <span id="white-captures">0</span></span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <aside class="sidebar right">
+                <div class="panel">
+                    <h2>Game Info</h2>
+                    <div id="game-info">
+                        <div class="info-item">
+                            <span>Move:</span>
+                            <span id="move-count">0</span>
+                        </div>
+                        <div class="info-item">
+                            <span>Time:</span>
+                            <span id="game-time">00:00</span>
+                        </div>
+                        <div class="info-item">
+                            <span>Territory:</span>
+                            <div id="territory-estimate">
+                                B: <span id="black-territory">0</span> | 
+                                W: <span id="white-territory">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel" id="tutorial-panel" style="display:none;">
+                    <h2>Tutorial</h2>
+                    <div id="tutorial-content">
+                        <h3>Welcome to Go!</h3>
+                        <p>Click on the board to place stones.</p>
+                        <ul>
+                            <li>Surround territory to win</li>
+                            <li>Capture opponent stones</li>
+                            <li>Create living groups with two eyes</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="panel" id="puzzle-panel" style="display:none;">
+                    <h2>Puzzle</h2>
+                    <div id="puzzle-content">
+                        <h3 id="puzzle-title"></h3>
+                        <p id="puzzle-description"></p>
+                        <button id="hint-btn">Hint</button>
+                        <button id="solution-btn">Show Solution</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Move History</h2>
+                    <div id="move-history"></div>
+                </div>
+            </aside>
+        </div>
+
+        <div id="modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="modal-title">Game Over</h2>
+                <div id="modal-body"></div>
+                <button id="modal-ok-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/js/board.js"></script>
+    <script src="static/js/game.js"></script>
+    <script src="static/js/websocket.js"></script>
+    <script src="static/js/learning.js"></script>
+</body>
+</html>
