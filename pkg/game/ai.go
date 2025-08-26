@@ -121,7 +121,6 @@ func (ai *AI) evaluateMove(move Point) int {
 		Rules:       ai.Game.Rules,
 		CurrentTurn: ai.Color,
 		Passed:      make(map[Color]bool),
-		Captures:    make(map[Color]int),
 	}
 	
 	for k, v := range ai.Game.Board.Captures {
@@ -169,7 +168,6 @@ func (ai *AI) evaluateMoveAdvanced(move Point) float64 {
 		Rules:       ai.Game.Rules,
 		CurrentTurn: ai.Color,
 		Passed:      make(map[Color]bool),
-		Captures:    make(map[Color]int),
 	}
 	
 	for k, v := range ai.Game.Board.Captures {
