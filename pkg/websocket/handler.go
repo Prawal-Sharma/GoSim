@@ -3,11 +3,17 @@ package websocket
 import (
 	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/Prawal-Sharma/GoSim/pkg/game"
 	"github.com/gorilla/websocket"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -384,7 +390,7 @@ func generateRoomID() string {
 	const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	roomID := ""
 	for i := 0; i < 6; i++ {
-		roomID += string(letters[i%len(letters)])
+		roomID += string(letters[rand.Intn(len(letters))])
 	}
 	return roomID
 }

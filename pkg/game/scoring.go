@@ -1,5 +1,7 @@
 package game
 
+import "fmt"
+
 type ScoringMethod string
 
 const (
@@ -95,9 +97,9 @@ func (s *Score) GetResult() string {
 
 func formatFloat(f float64) string {
 	if f == float64(int(f)) {
-		return string(rune(int(f)))
+		return fmt.Sprintf("%d", int(f))
 	}
-	return string(rune(int(f*10))/10.0)
+	return fmt.Sprintf("%.1f", f)
 }
 
 type DeadStoneMarker struct {
@@ -284,7 +286,7 @@ func GetGameResult(game *Game, method ScoringMethod, komi float64) *GameResult {
 }
 
 func generateSGF(game *Game) string {
-	sgf := "(;FF[4]GM[1]SZ[" + string(rune(game.Board.Size)) + "]"
+	sgf := fmt.Sprintf("(;FF[4]GM[1]SZ[%d]", game.Board.Size)
 	
 	for i, state := range game.Board.History {
 		if state.Move != nil {

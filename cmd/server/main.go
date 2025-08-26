@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/Prawal-Sharma/GoSim/pkg/game"
 	"github.com/Prawal-Sharma/GoSim/pkg/websocket"
@@ -108,104 +110,84 @@ func main() {
 }
 
 func getAIMove(g *game.Game, color game.Color, difficulty string) *game.Point {
-	validMoves := g.GetValidMoves(color)
-	
-	if len(validMoves) == 0 {
-		return nil
-	}
-
-	switch difficulty {
-	case "random":
-		return &validMoves[0]
-	case "easy":
-		bestMove := validMoves[0]
-		bestScore := 0
-		
-		for _, move := range validMoves {
-			score := evaluateMove(g, move, color)
-			if score > bestScore {
-				bestScore = score
-				bestMove = move
-			}
-		}
-		return &bestMove
-	default:
-		return &validMoves[len(validMoves)/2]
-	}
+	ai := game.NewAI(color, difficulty)
+	return ai.GetMove(g)
 }
 
-func evaluateMove(g *game.Game, move game.Point, color game.Color) int {
-	tempGame := &game.Game{
-		Board:       g.Board.Clone(),
-		Rules:       g.Rules,
-		CurrentTurn: color,
-		Passed:      make(map[game.Color]bool),
-	}
-
-	tempGame.MakeMove(move, color)
-	
-	score := 0
-	
-	if tempGame.Board.Captures[color] > g.Board.Captures[color] {
-		score += (tempGame.Board.Captures[color] - g.Board.Captures[color]) * 10
-	}
-	
-	group := tempGame.Board.GetGroup(move)
-	liberties := tempGame.Board.GetLiberties(group)
-	score += len(liberties) * 2
-	
-	cornerBonus := 0
-	if (move.X < 3 || move.X > g.Board.Size-4) && (move.Y < 3 || move.Y > g.Board.Size-4) {
-		cornerBonus = 5
-	}
-	score += cornerBonus
-	
-	return score
-}
 
 func loadPuzzles() []map[string]interface{} {
-	puzzles := []map[string]interface{}{
-		{
-			"id":          1,
-			"title":       "Basic Capture",
-			"description": "Capture the white stone",
-			"difficulty":  "beginner",
-			"board":       createPuzzleBoard(9, "capture1"),
-		},
-		{
-			"id":          2,
-			"title":       "Ladder Problem",
-			"description": "Can black capture the white stone with a ladder?",
-			"difficulty":  "intermediate",
-			"board":       createPuzzleBoard(9, "ladder1"),
-		},
+	puzzles := []map[string]interface{}{}
+	
+	// Try to load from JSON file first
+	puzzleFile := filepath.Join("data", "puzzles", "beginner.json")
+	data, err := ioutil.ReadFile(puzzleFile)
+	if err == nil {
+		var loadedPuzzles []map[string]interface{}
+		if json.Unmarshal(data, &loadedPuzzles) == nil {
+			puzzles = append(puzzles, loadedPuzzles...)
+		}
+	}
+	
+	// Add default puzzles if no file found
+	if len(puzzles) == 0 {
+		puzzles = []map[string]interface{}{
+			{
+				"id":          1,
+				"title":       "Basic Capture",
+				"description": "Capture the white stone",
+				"difficulty":  "beginner",
+				"board":       createPuzzleBoard(9, "capture1"),
+			},
+			{
+				"id":          2,
+				"title":       "Ladder Problem",
+				"description": "Can black capture the white stone with a ladder?",
+				"difficulty":  "intermediate",
+				"board":       createPuzzleBoard(9, "ladder1"),
+			},
+		}
 	}
 	return puzzles
 }
 
 func loadLessons() []map[string]interface{} {
-	lessons := []map[string]interface{}{
-		{
-			"id":          1,
-			"title":       "Introduction to Go",
-			"description": "Learn the basics of Go",
-			"content":     "Go is an ancient board game...",
-			"level":       "beginner",
-		},
-		{
-			"id":          2,
-			"title":       "Capturing Stones",
-			"description": "Learn how to capture opponent stones",
-			"content":     "Stones are captured when they have no liberties...",
-			"level":       "beginner",
-		},
-		{
-			"id":          3,
-			"title":       "Life and Death",
-			"description": "Understanding when groups are alive or dead",
-			"content":     "A group is alive if it has two eyes...",
-			"level":       "intermediate",
-		},
+	lessons := []map[string]interface{}{}
+	
+	// Try to load from JSON file first
+	lessonFile := filepath.Join("data", "lessons", "basics.json")
+	data, err := ioutil.ReadFile(lessonFile)
+	if err == nil {
+		var loadedLessons []map[string]interface{}
+		if json.Unmarshal(data, &loadedLessons) == nil {
+			lessons = append(lessons, loadedLessons...)
+		}
+	}
+	
+	// Add default lessons if no file found
+	if len(lessons) == 0 {
+		lessons = []map[string]interface{}{
+			{
+				"id":          1,
+				"title":       "Introduction to Go",
+				"description": "Learn the basics of Go",
+				"content":     "Go is an ancient board game originated in China over 4000 years ago. The objective is to control more territory than your opponent.",
+				"level":       "beginner",
+			},
+			{
+				"id":          2,
+				"title":       "Capturing Stones",
+				"description": "Learn how to capture opponent stones",
+				"content":     "Stones are captured when they have no liberties. Liberties are empty points directly adjacent to a stone.",
+				"level":       "beginner",
+			},
+			{
+				"id":          3,
+				"title":       "Life and Death",
+				"description": "Understanding when groups are alive or dead",
+				"content":     "A group is alive if it has two eyes. An eye is an empty space surrounded by your stones that cannot be filled by the opponent.",
+				"level":       "intermediate",
+			},
+		}
 	}
 	return lessons
 }
