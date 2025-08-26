@@ -40,10 +40,28 @@ An interactive, browser-based Go (Weiqi/Baduk) simulator designed to teach the a
 ## Quick Start
 
 ### Prerequisites
-- Go 1.21 or higher
+- Go 1.21 or higher (Download from: https://golang.org/dl/)
 - Modern web browser (Chrome, Firefox, Safari, Edge)
 
-### Installation
+### Installation & Running
+
+#### Easy Method (Recommended):
+
+**macOS/Linux:**
+```bash
+git clone https://github.com/Prawal-Sharma/GoSim.git
+cd GoSim
+./start.sh
+```
+
+**Windows:**
+```cmd
+git clone https://github.com/Prawal-Sharma/GoSim.git
+cd GoSim
+start.bat
+```
+
+#### Manual Method:
 
 1. Clone the repository:
 ```bash
@@ -59,6 +77,13 @@ go mod download
 3. Run the server:
 ```bash
 go run cmd/server/main.go
+```
+
+#### Using Make (if installed):
+```bash
+make run    # Run the server
+make build  # Build binary
+make test   # Run tests
 ```
 
 4. Open your browser and navigate to:

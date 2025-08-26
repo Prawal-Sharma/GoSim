@@ -24,6 +24,7 @@ class GoGame {
         });
         
         document.getElementById('single-player-btn').addEventListener('click', () => this.startSinglePlayer());
+        document.getElementById('local-player-btn').addEventListener('click', () => this.startLocalPlayer());
         document.getElementById('multiplayer-btn').addEventListener('click', () => this.startMultiplayer());
         document.getElementById('learn-btn').addEventListener('click', () => this.startLearningMode());
         document.getElementById('puzzle-btn').addEventListener('click', () => this.startPuzzleMode());
@@ -79,6 +80,23 @@ class GoGame {
         this.updateTurnIndicator();
     }
 
+    startLocalPlayer() {
+        this.gameMode = 'local';
+        this.gameStarted = true;
+        this.currentTurn = 'black';
+        this.moveHistory = [];
+        
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('game-controls').style.display = 'block';
+        document.getElementById('ai-difficulty').style.display = 'none';
+        document.getElementById('room-section').style.display = 'none';
+        
+        this.board.reset(this.board.size);
+        this.startTimer();
+        this.updateStatus('Local 2-Player Game Started!');
+        this.updateTurnIndicator();
+    }
+
     startMultiplayer() {
         this.gameMode = 'multiplayer';
         document.getElementById('room-section').style.display = 'block';
@@ -89,26 +107,37 @@ class GoGame {
 
     startLearningMode() {
         this.gameMode = 'learn';
+        this.gameStarted = true; // Allow interaction in learning mode
         document.getElementById('tutorial-panel').style.display = 'block';
         document.getElementById('puzzle-panel').style.display = 'none';
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('game-controls').style.display = 'block';
         
         this.loadLesson(1);
     }
 
     startPuzzleMode() {
         this.gameMode = 'puzzle';
+        this.gameStarted = true; // Allow moves in puzzle mode
         document.getElementById('puzzle-panel').style.display = 'block';
         document.getElementById('tutorial-panel').style.display = 'none';
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('game-controls').style.display = 'block';
         
         this.loadPuzzle(1);
     }
 
     async handleMove(x, y) {
-        if (!this.gameStarted || this.currentTurn !== this.playerColor) {
+        if (!this.gameStarted) {
             return;
         }
         
+        // In AI mode, always allow the human player to move when it's their turn
         if (this.gameMode === 'ai') {
+            if (this.currentTurn !== this.playerColor) {
+                return;
+            }
+            
             const moveData = {
                 x: x,
                 y: y,
@@ -117,13 +146,31 @@ class GoGame {
             
             this.makeMove(moveData);
             
+            // Trigger AI move after a short delay
             setTimeout(() => {
                 this.makeAIMove();
             }, 500);
         } else if (this.gameMode === 'multiplayer' && this.wsConnection) {
+            if (this.currentTurn !== this.playerColor) {
+                return;
+            }
             this.wsConnection.sendMove(x, y);
         } else if (this.gameMode === 'puzzle') {
             this.checkPuzzleMove(x, y);
+        } else if (this.gameMode === 'learn') {
+            // Handle learning exercises
+            if (window.learning && window.learning.currentExercise) {
+                window.learning.checkExerciseMove(x, y);
+            }
+        } else if (this.gameMode === 'local') {
+            // Local two-player mode
+            const moveData = {
+                x: x,
+                y: y,
+                color: this.currentTurn === 'black' ? 1 : 2
+            };
+            
+            this.makeMove(moveData);
         }
     }
 
@@ -279,8 +326,14 @@ class GoGame {
                 document.getElementById('puzzle-title').textContent = puzzle.title;
                 document.getElementById('puzzle-description').textContent = puzzle.description;
                 
-                this.board.updateBoard(puzzle.board);
+                // Ensure the board is the right size
+                if (puzzle.board && puzzle.board.length > 0) {
+                    this.board.reset(puzzle.board.length);
+                    this.board.updateBoard(puzzle.board);
+                }
+                
                 this.currentPuzzle = puzzle;
+                this.updateStatus(puzzle.description);
             }
         } catch (error) {
             console.error('Error loading puzzle:', error);
@@ -288,7 +341,24 @@ class GoGame {
     }
 
     checkPuzzleMove(x, y) {
-        console.log('Checking puzzle move at', x, y);
+        if (!this.currentPuzzle) {
+            console.log('No puzzle loaded');
+            return;
+        }
+        
+        // Check if the move matches the solution
+        if (this.currentPuzzle.solution && this.currentPuzzle.solution.moves) {
+            const solutionMove = this.currentPuzzle.solution.moves[0];
+            if (solutionMove && solutionMove.x === x && solutionMove.y === y) {
+                this.showModal('Correct!', 'Well done! You solved the puzzle.');
+                // Update the board with the solution move
+                const currentBoard = this.board.board.map(row => [...row]);
+                currentBoard[x][y] = solutionMove.color || 1;
+                this.board.updateBoard(currentBoard);
+            } else {
+                this.updateStatus('Not quite right. Try again!');
+            }
+        }
     }
 
     getPositionNotation(x, y) {

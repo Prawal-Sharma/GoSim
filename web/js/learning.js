@@ -298,7 +298,7 @@ class LearningModule {
     }
 
     checkExerciseMove(x, y) {
-        if (!this.currentExercise) return;
+        if (!this.currentExercise) return false;
         
         const correct = this.currentExercise.check(x, y);
         

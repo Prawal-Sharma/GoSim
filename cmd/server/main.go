@@ -32,12 +32,15 @@ func main() {
 	hub := websocket.NewHub()
 	go hub.Run()
 
+	// Serve static files
+	r.Handle("/css/*", http.StripPrefix("/css/", http.FileServer(http.Dir("web/css"))))
+	r.Handle("/js/*", http.StripPrefix("/js/", http.FileServer(http.Dir("web/js"))))
+	r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir("web/assets"))))
+	
+	// Serve index.html
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "web/index.html")
 	})
-
-	fileServer := http.FileServer(http.Dir("./web"))
-	r.Handle("/static/*", http.StripPrefix("/static", fileServer))
 
 	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		websocket.HandleWebSocket(hub, w, r)
